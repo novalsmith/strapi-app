@@ -1,0 +1,14 @@
+# .dockerignore
+# Abaikan folder yang hanya berisi data atau node_modules
+# My-project sudah di mount, tapi seringkali bagus untuk mengabaikan node_modules host
+my-project/node_modules/
+node_modules/
+
+# Abaikan folder volume data database
+mysql-data-dev/
+mysql-data-prod/
+
+# Abaikan cache Strapi dan build folder
+dist/
+.cache/
+.tmp/

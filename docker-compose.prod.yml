@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # --- 1. STRAPI PRODUCTION SERVICE ---
+  strapi:
+    container_name: strapi-prod-service
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: always # Wajib 'always' untuk Production
+    env_file: .env
+    ports:
+      # Expose port host ${STRAPI_PORT_PROD} (misal: 1337) ke port internal 1337
+      - ${STRAPI_PORT_PROD}:1337 
+    volumes:
+      # Volume terkelola Docker untuk persistensi file upload
+      - strapi_uploads:/opt/strapi/public/uploads 
+    environment:
+      # Koneksi Database Prod
+      DATABASE_CLIENT: mysql
+      DATABASE_HOST: mysql-db 
+      DATABASE_PORT: 3306
+      DATABASE_NAME: ${MYSQL_DATABASE_NAME}
+      DATABASE_USERNAME: ${MYSQL_USER}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD_PROD} # Menggunakan password Prod
+      HOST: 0.0.0.0
+      PORT: 1337
+      NODE_ENV: production # MODE PRODUKSI
+    # Jalankan Strapi dalam mode Production (menggunakan npm start)
+    command: npm start
+    networks:
+      - strapi_network
+
+  # --- 2. MYSQL PRODUCTION SERVICE ---
+  mysql-db:
+    container_name: mysql-prod-db
+    image: mysql:8.0
+    restart: always
+    env_file: .env
+    # Port TIDAK dipublikasikan secara default (tingkatkan keamanan)
+    # ports:
+    #   - ${MYSQL_PORT_PROD}:3306 
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_PROD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD_PROD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE_NAME}
+    volumes:
+      # Docker Volume Terkelola untuk data Prod
+      - mysql_prod_data:/var/lib/mysql
+      # - ./mysql-init:/docker-entrypoint-initdb.d/ 
+    networks:
+      - strapi_network
+
+volumes:
+  mysql_prod_data:
+    driver: local
+  strapi_uploads:
+    driver: local
+
+networks:
+  strapi_network:
+    driver: bridge

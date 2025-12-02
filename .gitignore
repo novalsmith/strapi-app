@@ -1,0 +1,46 @@
+# .dockerignore
+# Abaikan folder yang hanya berisi data atau node_modules
+# My-project sudah di mount, tapi seringkali bagus untuk mengabaikan node_modules host
+my-project/node_modules/
+node_modules/
+ 
+ --- Docker Volumes and Data ---
+
+Folder data MySQL di host (CRITICAL: Penyebab error Anda)
+
+mysql-data-dev/
+mysql-data/
+
+--- Environment Files ---
+
+Jangan pernah commit rahasia/kunci ENV production
+
+.env
+.env.production
+.env.development
+
+--- Umum ---
+
+node_modules/
+.vscode/
+.DS_Store
+
+--- Strapi Specific ---
+
+Strapi Build files (dibuat saat build)
+
+dist/
+build/
+.cache/
+
+Strapi data files (jika ada file SQLite di dalamnya)
+
+.tmp/
+
+Log files
+
+*.log
+
+File yang dibuat oleh Strapi CLI
+
+tsconfig.tsbuildinfo

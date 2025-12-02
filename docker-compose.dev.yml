@@ -1,0 +1,60 @@
+services:
+  # --- 1. STRAPI DEVELOPMENT SERVICE ---
+  strapi:
+    container_name: strapi-dev-service
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - ${STRAPI_PORT_DEV}:1337
+    volumes:
+      # Mount folder kode Strapi Anda ke dalam container
+      - ./my-project:/opt/strapi
+      # Volume anonim untuk dependencies dan cache
+      - /opt/strapi/node_modules 
+      - /opt/strapi/.cache
+    environment:
+      # PENTING: Koneksi Database menggunakan nama service Docker
+      NODE_ENV: development
+      DATABASE_CLIENT: mysql
+      DATABASE_HOST: mysql-db # <--- HOSTNAME INTERNAL DOCKER
+      DATABASE_PORT: 3306
+      DATABASE_NAME: ${MYSQL_DATABASE_NAME}
+      DATABASE_USERNAME: ${MYSQL_USER}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD_DEV}
+      # Variabel Strapi lainnya (dari .env)
+      APP_KEYS: ${APP_KEYS}
+      API_TOKEN_SALT: ${API_TOKEN_SALT}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET} # ⚠️ Ditambahkan untuk menghilangkan warning
+      HOST: 0.0.0.0
+      PORT: 1337
+    command: npm run develop --host 0.0.0.0 --port 1337
+    networks:
+      - strapi_network
+    depends_on:
+      - mysql-db # Pastikan MySQL berjalan sebelum Strapi
+
+  # --- 2. MYSQL DEVELOPMENT SERVICE ---
+  mysql-db:
+    container_name: mysql-strapi-dev-db
+    image: mysql:8.0
+    restart: unless-stopped
+    env_file: .env # MySQL service membaca semua ENV dari sini
+    ports:
+      - ${MYSQL_PORT_DEV}:3306 
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_DEV}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD_DEV}
+      MYSQL_DATABASE: ${MYSQL_DATABASE_NAME}
+    volumes:
+      # Persistent storage untuk data MySQL
+      - ./mysql-data-dev:/var/lib/mysql
+    networks:
+      - strapi_network
+
+networks:
+  strapi_network:
+    driver: bridge
