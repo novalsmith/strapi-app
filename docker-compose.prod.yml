@@ -1,71 +1,70 @@
+# Versi Docker Compose
+version: '3.8'
+
+# Definisi Services
 services:
   # --- 1. STRAPI PRODUCTION SERVICE ---
   strapi:
     container_name: strapi-prod-service
-    build: 
+    image: strapi/strapi
+    build:
       context: .
       dockerfile: Dockerfile
-      target: production # Menggunakan Stage 2 (production) dari Dockerfile
-    restart: always 
-    # MENGGUNAKAN FILE ENV KHUSUS PRODUCTION (Wajib ada di VPS)
+      target: production
+    restart: always
+    # Muat variabel lingkungan dari .env.production
     env_file: .env.production
-    ports:
-      # Expose port host ${STRAPI_PORT_PROD} (misalnya: 80, 443, atau 1337) ke port internal 1337
-      - ${STRAPI_PORT_PROD}:1337 
-    volumes:
-      # Volume terkelola Docker untuk persistensi file upload (wajib)
-      - strapi_uploads:/opt/strapi/public/uploads 
+    
+    # Variabel Lingkungan yang HARUS DIDEFINISIKAN agar Strapi berjalan
     environment:
-      # PENTING: Kunci Rahasia Strapi Harus Disuntikkan (diambil dari .env.production)
-      APP_KEYS: ${APP_KEYS_PROD}
-      API_TOKEN_SALT: ${API_TOKEN_SALT_PROD}
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET_PROD}
-      JWT_SECRET: ${JWT_SECRET_PROD}
-      
-      # Database Configuration
+      # Koneksi Database
       DATABASE_CLIENT: mysql
-      DATABASE_HOST: mysql-db 
-      DATABASE_PORT: 3306
-      # Database Credentials
+      DATABASE_HOST: mysql-prod-db # Nama service database di Docker Compose
       DATABASE_NAME: ${MYSQL_DATABASE_NAME}
       DATABASE_USERNAME: ${MYSQL_USER}
       DATABASE_PASSWORD: ${MYSQL_PASSWORD_PROD}
-      
-      # Strapi Core
+      DATABASE_PORT: 3306
+      # Konfigurasi Server
+      NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 1337
-      NODE_ENV: production
-      # URL Publik (Wajib untuk Admin Panel)
-      STRAPI_PUBLIC_URL: ${STRAPI_PUBLIC_URL}
-      
-    # Command diambil dari Dockerfile CMD ["npm", "start"]
-    networks:
-      - strapi_network
+      # Kunci Rahasia (Secrets) yang Diperlukan Strapi
+      # PENTING: Variabel internal Strapi (kiri) dipetakan ke variabel di .env.production (kanan)
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET_PROD} # <-- MENGGUNAKAN _PROD
+      API_TOKEN_SALT: ${API_TOKEN_SALT_PROD}     # <-- MENGGUNAKAN _PROD
+      APP_KEYS: ${APP_KEYS_PROD}                 # <-- MENGGUNAKAN _PROD
+      JWT_SECRET: ${JWT_SECRET_PROD}             # <-- MENGGUNAKAN _PROD
+
+    # Pemetaan Port Host:Container
+    ports:
+      - "${STRAPI_PORT_PROD}:1337" 
+    
+    # Ketergantungan
     depends_on:
-      - mysql-db # Memastikan MySQL dimulai sebelum Strapi
+      - mysql-db
+    
+    # Pemetaan Volume (untuk persistensi data)
+    volumes:
+      - ./app:/opt/strapi/app
+      - ./public/uploads:/opt/strapi/public/uploads
 
   # --- 2. MYSQL PRODUCTION SERVICE ---
   mysql-db:
     container_name: mysql-prod-db
     image: mysql:8.0
     restart: always
-    env_file: .env.production # MENGGUNAKAN FILE ENV KHUSUS PRODUCTION
-    
+    env_file: .env.production
+    # Port Host:Container
+    ports:
+      - "${MYSQL_PORT_PROD}:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_PROD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE_NAME}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD_PROD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE_NAME}
     volumes:
-      # Volume persisten untuk data MySQL (SANGAT KRITIS)
-      - mysql_prod_data:/var/lib/mysql
-    networks:
-      - strapi_network
+      - mysql_data:/var/lib/mysql
 
+# Volume yang diperlukan
 volumes:
-  mysql_prod_data:
-  strapi_uploads:
-
-networks:
-  strapi_network:
-    driver: bridge
+  mysql_data:
