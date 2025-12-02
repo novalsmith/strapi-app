@@ -8,7 +8,7 @@ services:
       target: production # Menggunakan Stage 2 (production) dari Dockerfile
     restart: always 
     # MENGGUNAKAN FILE ENV KHUSUS PRODUCTION (Wajib ada di VPS)
-    env_file: .env.production 
+    env_file: .env.production
     ports:
       # Expose port host ${STRAPI_PORT_PROD} (misalnya: 80, 443, atau 1337) ke port internal 1337
       - ${STRAPI_PORT_PROD}:1337 

@@ -15,9 +15,7 @@ mysql-data/
 
 Jangan pernah commit rahasia/kunci ENV production
 
-.env
-.env.production
-.env.development
+ 
 
 --- Umum ---
 
