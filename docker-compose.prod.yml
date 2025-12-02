@@ -13,7 +13,7 @@ services:
       target: production
     restart: always
     # Muat variabel lingkungan dari .env.production
-    env_file: .env.production
+    env_file: .env
     
     # Variabel Lingkungan yang HARUS DIDEFINISIKAN agar Strapi berjalan
     environment:
@@ -53,7 +53,7 @@ services:
     container_name: mysql-prod-db
     image: mysql:8.0
     restart: always
-    env_file: .env.production
+    env_file: .env
     # Port Host:Container
     ports:
       - "${MYSQL_PORT_PROD}:3306"
